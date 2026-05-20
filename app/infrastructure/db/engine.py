@@ -2,7 +2,7 @@ from collections.abc import Iterator
 
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = "sqlite:///app/development.sqlite3"
+DATABASE_URL = "sqlite:///db/development.sqlite3"
 
 engine = create_engine(
     DATABASE_URL,
