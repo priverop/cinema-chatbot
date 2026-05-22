@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlmodel import Session
 
+from app.application.tools.theater_tools import build_get_theaters_tool
 from app.application.use_cases.chat import Chat
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
@@ -67,5 +68,7 @@ def get_llm_client(
 
 def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
+    list_theaters: ListTheaters = Depends(get_list_theaters_use_case),
 ) -> Chat:
-    return Chat(llm=llm)
+    tools = [build_get_theaters_tool(list_theaters)]
+    return Chat(llm=llm, tools=tools)

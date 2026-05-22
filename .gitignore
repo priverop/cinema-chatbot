@@ -1,3 +1,6 @@
+# Ruby learning sandbox (mirror project)
+ruby/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

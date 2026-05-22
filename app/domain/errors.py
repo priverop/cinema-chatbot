@@ -12,3 +12,7 @@ class LLMRateLimited(LLMError):
 
 class LLMInvalidRequest(LLMError):
     """Bad request to the LLM (e.g. 400, invalid input)."""
+
+
+class LLMToolLoopExceeded(LLMError):
+    """Tool-call loop exceeded the maximum iteration cap."""
