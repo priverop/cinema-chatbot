@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 
 from app.domain.entities.theater import Theater
 from app.infrastructure.db.models.theater_row import TheaterRow
+from app.infrastructure.repositories._text import fold
 
 
 @dataclass
@@ -20,12 +21,15 @@ class SQLModelTheaterRepository:
         self, name: str | None = None, city: str | None = None
     ) -> list[Theater]:
         stmt = select(TheaterRow).where(TheaterRow.is_enabled == True)  # noqa: E712
-        if name:
-            stmt = stmt.where(TheaterRow.name.ilike(f"%{name}%"))
-        if city:
-            stmt = stmt.where(TheaterRow.location.ilike(f"%{city}%"))
         rows = self.session.exec(stmt).all()
-        return [self._to_entity(row) for row in rows]
+        name_q = fold(name)
+        city_q = fold(city)
+        filtered = [
+            row for row in rows
+            if (not name_q or name_q in fold(row.name))
+            and (not city_q or city_q in fold(row.location))
+        ]
+        return [self._to_entity(row) for row in filtered]
 
     @staticmethod
     def _to_entity(row: TheaterRow) -> Theater:

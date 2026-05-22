@@ -1,11 +1,13 @@
 from fastapi import Depends
 from sqlmodel import Session
 
+from app.application.tools.movie_tools import build_get_movies_tool
 from app.application.tools.theater_tools import build_get_theaters_tool
 from app.application.use_cases.chat import Chat
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
 from app.application.use_cases.list_theaters import ListTheaters
+from app.application.use_cases.search_movies import SearchMovies
 from app.application.use_cases.search_theaters import SearchTheaters
 from app.domain.ports.llm_client import LLMClient
 from app.domain.ports.movie_repository import MovieRepository
@@ -55,6 +57,12 @@ def get_list_movies_use_case(
     return ListMovies(repository=repository)
 
 
+def get_search_movies_use_case(
+    repository: MovieRepository = Depends(get_movie_repository),
+) -> SearchMovies:
+    return SearchMovies(repository=repository)
+
+
 def get_showtime_repository(
     session: Session = Depends(get_session),
 ) -> ShowtimeRepository:
@@ -76,6 +84,10 @@ def get_llm_client(
 def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
     search_theaters: SearchTheaters = Depends(get_search_theaters_use_case),
+    search_movies: SearchMovies = Depends(get_search_movies_use_case),
 ) -> Chat:
-    tools = [build_get_theaters_tool(search_theaters)]
+    tools = [
+        build_get_theaters_tool(search_theaters),
+        build_get_movies_tool(search_movies),
+    ]
     return Chat(llm=llm, tools=tools)
