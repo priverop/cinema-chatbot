@@ -103,9 +103,10 @@ class GeminiClient:
             if msg.content:
                 parts.append(types.Part.from_text(text=msg.content))
             for call in msg.tool_calls:
-                parts.append(
-                    types.Part.from_function_call(name=call.name, args=call.args)
-                )
+                part = types.Part.from_function_call(name=call.name, args=call.args)
+                if call.thought_signature is not None:
+                    part.thought_signature = call.thought_signature
+                parts.append(part)
             return types.Content(role="model", parts=parts)
         # user
         return types.Content(role="user", parts=[types.Part.from_text(text=msg.content)])
@@ -129,7 +130,11 @@ class GeminiClient:
                 fn = getattr(part, "function_call", None)
                 if fn and getattr(fn, "name", None):
                     tool_calls.append(
-                        ToolCall(name=fn.name, args=dict(fn.args or {}))
+                        ToolCall(
+                            name=fn.name,
+                            args=dict(fn.args or {}),
+                            thought_signature=getattr(part, "thought_signature", None),
+                        )
                     )
                     continue
                 text = getattr(part, "text", None)

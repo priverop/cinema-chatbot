@@ -14,6 +14,7 @@ class ToolCall:
     name: str
     args: dict[str, Any]
     id: str = ""
+    thought_signature: bytes | None = None
 
 
 @dataclass(frozen=True)
