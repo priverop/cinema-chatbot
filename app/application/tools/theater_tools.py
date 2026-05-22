@@ -3,38 +3,44 @@ import logging
 from typing import Any
 
 from app.application.tools.base import Tool
-from app.application.use_cases.list_theaters import ListTheaters
+from app.application.use_cases.search_theaters import SearchTheaters
 from app.domain.ports.llm_client import ToolSpec
 
 logger = logging.getLogger(__name__)
 
 
-def build_get_theaters_tool(list_theaters: ListTheaters) -> Tool:
+def build_get_theaters_tool(search_theaters: SearchTheaters) -> Tool:
     spec = ToolSpec(
         name="get_theaters",
         description=(
-            "Retrieve cinemas/theaters. Optionally filter by city. "
-            "Use when the user asks about theaters, cinemas, locations, or where movies play."
+            "Retrieve cinemas/theaters. Optionally filter by name and/or city. "
+            "Prefer passing a name when the user mentions a specific cinema "
+            "(e.g. 'Verdi', 'Yelmo Ideal') to avoid returning the full list. "
+            "Use when the user asks about theaters, cinemas, locations, prices, "
+            "discounts, or where movies play."
         ),
         parameters={
             "type": "object",
             "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Theater name or substring (e.g. 'Verdi'). Omit if unknown.",
+                },
                 "city": {
                     "type": "string",
-                    "description": "City name to filter theaters by (e.g. 'Madrid'). Omit to return all.",
+                    "description": "City name to filter by (e.g. 'Madrid'). Omit if unknown.",
                 },
             },
         },
     )
 
     def handler(args: dict[str, Any]) -> str:
-        city = (args.get("city") or "").strip().lower()
-        theaters = list_theaters()
-        if city:
-            theaters = [
-                t for t in theaters if t.location and city in t.location.lower()
-            ]
-        logger.info("get_theaters called city=%r -> %d results", city or None, len(theaters))
+        name = (args.get("name") or "").strip() or None
+        city = (args.get("city") or "").strip() or None
+        theaters = search_theaters(name=name, city=city)
+        logger.info(
+            "get_theaters called name=%r city=%r -> %d results", name, city, len(theaters)
+        )
         payload = [
             {
                 "id": t.id,

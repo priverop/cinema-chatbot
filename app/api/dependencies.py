@@ -6,6 +6,7 @@ from app.application.use_cases.chat import Chat
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
 from app.application.use_cases.list_theaters import ListTheaters
+from app.application.use_cases.search_theaters import SearchTheaters
 from app.domain.ports.llm_client import LLMClient
 from app.domain.ports.movie_repository import MovieRepository
 from app.domain.ports.showtime_repository import ShowtimeRepository
@@ -34,6 +35,12 @@ def get_list_theaters_use_case(
     repository: TheaterRepository = Depends(get_theater_repository),
 ) -> ListTheaters:
     return ListTheaters(repository=repository)
+
+
+def get_search_theaters_use_case(
+    repository: TheaterRepository = Depends(get_theater_repository),
+) -> SearchTheaters:
+    return SearchTheaters(repository=repository)
 
 
 def get_movie_repository(
@@ -68,7 +75,7 @@ def get_llm_client(
 
 def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
-    list_theaters: ListTheaters = Depends(get_list_theaters_use_case),
+    search_theaters: SearchTheaters = Depends(get_search_theaters_use_case),
 ) -> Chat:
-    tools = [build_get_theaters_tool(list_theaters)]
+    tools = [build_get_theaters_tool(search_theaters)]
     return Chat(llm=llm, tools=tools)
