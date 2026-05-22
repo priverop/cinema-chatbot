@@ -16,6 +16,8 @@ export function ChatWindow({ messages, loading, onSend }: Props) {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.text;
+
   return (
     <div className="chat-window">
       <div className="messages">
@@ -29,7 +31,7 @@ export function ChatWindow({ messages, loading, onSend }: Props) {
         )}
         <div ref={endRef} />
       </div>
-      <MessageInput onSend={onSend} disabled={loading} />
+      <MessageInput onSend={onSend} disabled={loading} lastUserMessage={lastUserMessage} />
     </div>
   );
 }
