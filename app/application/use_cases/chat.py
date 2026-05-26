@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from app.application.tools.base import Tool
 from app.domain.entities.chat_message import ChatResponse
@@ -10,26 +11,38 @@ logger = logging.getLogger(__name__)
 
 MAX_TOOL_ITERATIONS = 5
 
-SYSTEM_PROMPT = (
-    "You are a helpful cinema assistant. You can answer questions about movies, "
-    "showtimes, theaters, and the app itself. When the user asks about cinemas, "
-    "theaters, or where movies play, use the get_theaters tool. When the user "
-    "asks about movies (by title, director, genre, or duration), use the "
-    "get_movies tool. Pass specific filters (name, title, genre, etc.) instead "
-    "of fetching the full list whenever possible. Genres in the catalog are in "
-    "Spanish — translate user terms before filtering. For general or FAQ "
-    "questions about the app, answer directly without calling tools. "
+SYSTEM_PROMPT_TEMPLATE = (
+    "You are a helpful cinema assistant. Today is {today} ({weekday}). "
+    "You can answer questions about movies, showtimes, theaters, and the app "
+    "itself. Tools available:\n"
+    "- get_theaters: cinemas, locations, base/discount prices.\n"
+    "- get_movies: titles, directors, genres, durations.\n"
+    "- get_showtimes: sessions filtered by movie, theater, city, date, "
+    "datetime range, or language ('vose', 'vo', 'dubbed').\n"
+    "- get_cheapest_session: single cheapest session for a movie, with "
+    "theater discount-day pricing applied.\n\n"
+    "Push filters into the tool call instead of asking for the full list and "
+    "filtering yourself. Convert relative times ('tonight', 'tomorrow', "
+    "'this week') to ISO 8601 datetimes using today's date before calling. "
+    "Genres in the catalog are in Spanish — translate user terms before "
+    "filtering. For general/FAQ questions about the app, answer directly. "
     "Reply concisely in the same language as the user.\n\n"
     "STRICT DATA POLICY: Only use information returned by the provided tools "
     "or present in this conversation. Do NOT use your own prior knowledge "
     "about movies, directors, theaters, showtimes, or cinema listings. "
     "Never invent movie titles, theater names, showtimes, prices, durations, "
     "or movie-theater relationships. If a tool returns no results or the "
-    "needed data is unavailable, say so explicitly — do not fill gaps with "
-    "guesses or external knowledge. If the user asks for something the tools "
-    "cannot answer (e.g. showtimes, movie-theater mapping), state that the "
-    "app does not have that information."
+    "needed data is unavailable, say so explicitly."
 )
+
+
+def _build_system_prompt() -> str:
+    now = datetime.now()
+    weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    return SYSTEM_PROMPT_TEMPLATE.format(
+        today=now.date().isoformat(),
+        weekday=weekdays[now.weekday()],
+    )
 
 
 @dataclass
@@ -46,7 +59,7 @@ class Chat:
             response = self.llm.generate_with_tools(
                 messages=history,
                 tools=tool_specs,
-                system_prompt=SYSTEM_PROMPT,
+                system_prompt=_build_system_prompt(),
             )
 
             if not response.tool_calls:

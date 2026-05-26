@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routers.chat import router as chat_router
 from app.api.routers.movies import router as movies_router
+from app.api.routers.sessions import router as sessions_router
 from app.api.routers.showtimes import router as showtimes_router
 from app.api.routers.theaters import router as theaters_router
 from app.domain.errors import (
@@ -23,6 +24,7 @@ app.add_middleware(
 app.include_router(theaters_router)
 app.include_router(movies_router)
 app.include_router(showtimes_router)
+app.include_router(sessions_router)
 app.include_router(chat_router)
 
 

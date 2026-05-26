@@ -2,8 +2,13 @@ from fastapi import Depends
 from sqlmodel import Session
 
 from app.application.tools.movie_tools import build_get_movies_tool
+from app.application.tools.showtime_tools import (
+    build_get_cheapest_session_tool,
+    build_get_showtimes_tool,
+)
 from app.application.tools.theater_tools import build_get_theaters_tool
 from app.application.use_cases.chat import Chat
+from app.application.use_cases.find_cheapest_session import FindCheapestSession
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
 from app.application.use_cases.list_theaters import ListTheaters
@@ -75,6 +80,12 @@ def get_list_showtimes_use_case(
     return ListShowtimes(repository=repository)
 
 
+def get_find_cheapest_session_use_case(
+    repository: ShowtimeRepository = Depends(get_showtime_repository),
+) -> FindCheapestSession:
+    return FindCheapestSession(repository=repository)
+
+
 def get_llm_client(
     settings: Settings = Depends(get_settings),
 ) -> LLMClient:
@@ -85,9 +96,15 @@ def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
     search_theaters: SearchTheaters = Depends(get_search_theaters_use_case),
     search_movies: SearchMovies = Depends(get_search_movies_use_case),
+    list_showtimes: ListShowtimes = Depends(get_list_showtimes_use_case),
+    find_cheapest_session: FindCheapestSession = Depends(
+        get_find_cheapest_session_use_case
+    ),
 ) -> Chat:
     tools = [
         build_get_theaters_tool(search_theaters),
         build_get_movies_tool(search_movies),
+        build_get_showtimes_tool(list_showtimes),
+        build_get_cheapest_session_tool(find_cheapest_session),
     ]
     return Chat(llm=llm, tools=tools)
