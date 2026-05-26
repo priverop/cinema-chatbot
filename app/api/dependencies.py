@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlmodel import Session
 
+from app.application.tools.knowledge_tools import build_search_knowledge_tool
 from app.application.tools.movie_tools import build_get_movies_tool
 from app.application.tools.showtime_tools import (
     build_get_cheapest_session_tool,
@@ -12,8 +13,11 @@ from app.application.use_cases.find_cheapest_session import FindCheapestSession
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
 from app.application.use_cases.list_theaters import ListTheaters
+from app.application.use_cases.search_knowledge import SearchKnowledge
 from app.application.use_cases.search_movies import SearchMovies
 from app.application.use_cases.search_theaters import SearchTheaters
+from app.domain.ports.embedding_client import EmbeddingClient
+from app.domain.ports.knowledge_repository import KnowledgeRepository
 from app.domain.ports.llm_client import LLMClient
 from app.domain.ports.movie_repository import MovieRepository
 from app.domain.ports.showtime_repository import ShowtimeRepository
@@ -21,6 +25,8 @@ from app.domain.ports.theater_repository import TheaterRepository
 from app.infrastructure.config.settings import Settings, get_settings
 from app.infrastructure.db.engine import get_session
 from app.infrastructure.llm.gemini_client import GeminiClient
+from app.infrastructure.llm.gemini_embedding_client import GeminiEmbeddingClient
+from app.infrastructure.rag.chroma_knowledge_repository import ChromaKnowledgeRepository
 from app.infrastructure.repositories.sqlmodel_movie_repository import (
     SQLModelMovieRepository,
 )
@@ -92,6 +98,28 @@ def get_llm_client(
     return GeminiClient(api_key=settings.gemini_api_key, model=settings.gemini_model)
 
 
+def get_embedding_client(
+    settings: Settings = Depends(get_settings),
+) -> EmbeddingClient:
+    return GeminiEmbeddingClient(
+        api_key=settings.gemini_api_key,
+        model=settings.gemini_embedding_model,
+    )
+
+
+def get_knowledge_repository(
+    settings: Settings = Depends(get_settings),
+) -> KnowledgeRepository:
+    return ChromaKnowledgeRepository(path=settings.chroma_path)
+
+
+def get_search_knowledge_use_case(
+    embedder: EmbeddingClient = Depends(get_embedding_client),
+    repository: KnowledgeRepository = Depends(get_knowledge_repository),
+) -> SearchKnowledge:
+    return SearchKnowledge(embedder=embedder, repository=repository)
+
+
 def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
     search_theaters: SearchTheaters = Depends(get_search_theaters_use_case),
@@ -100,11 +128,13 @@ def get_chat_use_case(
     find_cheapest_session: FindCheapestSession = Depends(
         get_find_cheapest_session_use_case
     ),
+    search_knowledge: SearchKnowledge = Depends(get_search_knowledge_use_case),
 ) -> Chat:
     tools = [
         build_get_theaters_tool(search_theaters),
         build_get_movies_tool(search_movies),
         build_get_showtimes_tool(list_showtimes),
         build_get_cheapest_session_tool(find_cheapest_session),
+        build_search_knowledge_tool(search_knowledge),
     ]
     return Chat(llm=llm, tools=tools)

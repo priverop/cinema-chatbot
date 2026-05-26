@@ -1,6 +1,9 @@
 # Ruby learning sandbox (mirror project)
 ruby/
 
+# ChromaDB vector index (regenerable via python -m app.scripts.index_knowledge)
+db/chroma/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
