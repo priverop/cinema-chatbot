@@ -13,6 +13,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   async function handleSend(text: string) {
+    if (text.trim() === "/clear") {
+      setMessages([{ id: uid(), role: "system", text: "Chat cleared" }]);
+      return;
+    }
     const userMsg: Message = { id: uid(), role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);

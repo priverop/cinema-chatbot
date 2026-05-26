@@ -1,4 +1,4 @@
-export type Role = "user" | "assistant" | "error";
+export type Role = "user" | "assistant" | "error" | "system";
 
 export type Message = {
   id: string;

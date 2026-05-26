@@ -82,6 +82,10 @@ body {
   justify-content: flex-start;
 }
 
+.bubble-row.system {
+  justify-content: center;
+}
+
 .bubble {
   max-width: 75%;
   padding: 0.5rem 0.75rem;
@@ -106,6 +110,15 @@ body {
 .bubble.error {
   background: var(--error-bubble);
   color: #8b0000;
+}
+
+.bubble.system {
+  background: transparent;
+  box-shadow: none;
+  color: #888;
+  font-size: 0.8rem;
+  font-style: italic;
+  padding: 0.2rem 0.5rem;
 }
 
 .bubble.typing {
