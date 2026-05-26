@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChatWindow } from "./components/ChatWindow";
 import { sendMessage } from "./api/chat";
+import type { ChatTurn } from "./api/chat";
 import type { Message } from "./types";
 
 function uid() {
@@ -16,7 +17,10 @@ export default function App() {
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
     try {
-      const reply = await sendMessage(text);
+      const history: ChatTurn[] = messages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as "user" | "assistant", text: m.text }));
+      const reply = await sendMessage(text, history);
       setMessages((prev) => [
         ...prev,
         { id: uid(), role: "assistant", text: reply },

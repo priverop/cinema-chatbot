@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from app.application.tools.base import Tool
-from app.domain.entities.chat_message import ChatResponse
+from app.domain.entities.chat_message import ChatResponse, ChatTurn
 from app.domain.errors import LLMToolLoopExceeded
 from app.domain.ports.llm_client import LLMClient, Message
 
@@ -50,14 +50,18 @@ class Chat:
     llm: LLMClient
     tools: list[Tool] = field(default_factory=list)
 
-    def __call__(self, message: str) -> ChatResponse:
+    def __call__(self, message: str, history: list[ChatTurn] | None = None) -> ChatResponse:
         tool_index = {t.spec.name: t for t in self.tools}
         tool_specs = [t.spec for t in self.tools]
-        history: list[Message] = [Message(role="user", content=message)]
+        prior: list[Message] = [
+            Message(role="user" if t.role == "user" else "model", content=t.text)
+            for t in (history or [])
+        ]
+        history_: list[Message] = [*prior, Message(role="user", content=message)]
 
         for iteration in range(1, MAX_TOOL_ITERATIONS + 1):
             response = self.llm.generate_with_tools(
-                messages=history,
+                messages=history_,
                 tools=tool_specs,
                 system_prompt=_build_system_prompt(),
             )
@@ -65,7 +69,7 @@ class Chat:
             if not response.tool_calls:
                 return ChatResponse(reply=response.text)
 
-            history.append(Message(role="model", content="", tool_calls=list(response.tool_calls)))
+            history_.append(Message(role="model", content="", tool_calls=list(response.tool_calls)))
             for call in response.tool_calls:
                 tool = tool_index.get(call.name)
                 if tool is None:
@@ -74,7 +78,7 @@ class Chat:
                 else:
                     logger.info("tool call iter=%d name=%s args=%s", iteration, call.name, call.args)
                     result = tool.handler(call.args)
-                history.append(Message(role="tool", content=result, tool_name=call.name))
+                history_.append(Message(role="tool", content=result, tool_name=call.name))
 
         raise LLMToolLoopExceeded(
             f"tool-call loop exceeded {MAX_TOOL_ITERATIONS} iterations"
