@@ -13,6 +13,10 @@ from app.domain.errors import (
     LLMRateLimited,
     LLMUnavailable,
 )
+from app.infrastructure.config.settings import get_settings
+from app.infrastructure.observability.opik_setup import configure_opik
+
+configure_opik(get_settings())
 
 app = FastAPI()
 app.add_middleware(

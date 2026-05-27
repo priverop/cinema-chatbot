@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     gemini_embedding_model: str = "gemini-embedding-001"
     chroma_path: str = "db/chroma"
     knowledge_path: str = "db/knowledge"
+    opik_api_key: str | None = None
+    opik_workspace: str | None = None
+    opik_project_name: str = "cinema-chatbot"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

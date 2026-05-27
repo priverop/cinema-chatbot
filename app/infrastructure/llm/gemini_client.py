@@ -3,6 +3,7 @@ import time
 from dataclasses import dataclass
 
 from google import genai
+from opik.integrations.genai import track_genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
@@ -34,7 +35,7 @@ class GeminiClient:
         tools: list[ToolSpec],
         system_prompt: str = "",
     ) -> LLMResponse:
-        client = genai.Client(api_key=self.api_key)
+        client = track_genai(genai.Client(api_key=self.api_key))
         contents = [self._to_content(m) for m in messages]
         config = types.GenerateContentConfig(
             system_instruction=system_prompt or None,
