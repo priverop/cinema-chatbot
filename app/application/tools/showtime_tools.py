@@ -71,6 +71,8 @@ def build_get_showtimes_tool(list_showtimes: ListShowtimes) -> Tool:
             "theater name, showtime, language, and theater pricing. "
             "Use for any showtime question — what's playing tonight, "
             "tomorrow's sessions, VOSE sessions in Madrid, etc. "
+            "Call directly even if unsure the movie exists — returns empty results if not found. "
+            "Do NOT call get_movies first to verify. "
             "Convert relative times ('tonight', 'tomorrow') to ISO "
             "datetimes before calling."
         ),

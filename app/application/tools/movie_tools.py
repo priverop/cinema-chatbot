@@ -22,7 +22,8 @@ def build_get_movies_tool(search_movies: SearchMovies) -> Tool:
             "'Acción', 'Animación', 'Documental', 'Ciencia Ficción'). "
             "Translate user genre terms to Spanish before calling. "
             "Use when the user asks about movies, titles, directors, genres, "
-            "or wants movies of a certain length."
+            "or wants movies of a certain length. "
+            "Do NOT use to check whether a movie has showtimes — use get_showtimes for that."
         ),
         parameters={
             "type": "object",
