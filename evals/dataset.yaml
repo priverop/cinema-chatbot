@@ -1,0 +1,134 @@
+# cinema-eval-v1 — dataset de evaluación para cinema-chatbot
+# expected_tools: conjunto de tools que el LLM DEBE llamar (set, no orden)
+# category: happy_path | rag | edge
+
+# --- MOVIES ---
+- case_id: list-all-movies
+  input: "¿Qué películas están en cartelera?"
+  expected_tools: ["get_movies"]
+  category: happy_path
+
+- case_id: movies-by-genre-comedy
+  input: "¿Hay alguna comedia en cartelera?"
+  expected_tools: ["get_movies"]
+  category: happy_path
+
+- case_id: movies-by-director
+  input: "¿Qué pelis de Christopher Nolan hay?"
+  expected_tools: ["get_movies"]
+  category: happy_path
+
+- case_id: movies-by-duration
+  input: "Pelis que duren menos de 2 horas"
+  expected_tools: ["get_movies"]
+  category: happy_path
+
+# --- SHOWTIMES ---
+- case_id: showtimes-today
+  input: "¿Qué sesiones hay hoy?"
+  expected_tools: ["get_showtimes"]
+  category: happy_path
+
+- case_id: showtimes-tomorrow
+  input: "¿Qué pelis hay mañana?"
+  expected_tools: ["get_showtimes"]
+  category: happy_path
+
+- case_id: showtimes-vose
+  input: "¿Hay sesiones en versión original con subtítulos?"
+  expected_tools: ["get_showtimes"]
+  category: happy_path
+
+- case_id: showtimes-movie-specific
+  input: "¿Cuándo ponen FixtureFilm Alpha?"
+  expected_tools: ["get_showtimes"]
+  category: happy_path
+
+- case_id: showtimes-weekend
+  input: "Sesiones del fin de semana"
+  expected_tools: ["get_showtimes"]
+  category: happy_path
+
+# --- CHEAPEST SESSION ---
+- case_id: cheapest-any-movie
+  input: "¿Cuál es la sesión más barata para FixtureFilm Alpha?"
+  expected_tools: ["get_cheapest_session"]
+  category: happy_path
+
+- case_id: cheapest-specific-movie
+  input: "¿Dónde puedo ver FixtureFilm Beta más barato?"
+  expected_tools: ["get_cheapest_session"]
+  category: happy_path
+
+- case_id: cheapest-this-week
+  input: "La sesión más barata para FixtureFilm Gamma esta semana"
+  expected_tools: ["get_cheapest_session"]
+  category: happy_path
+
+# --- THEATERS ---
+- case_id: list-theaters
+  input: "¿Qué cines hay disponibles?"
+  expected_tools: ["get_theaters"]
+  category: happy_path
+
+- case_id: theater-by-city
+  input: "¿Qué salas hay en Madrid?"
+  expected_tools: ["get_theaters"]
+  category: happy_path
+
+- case_id: theater-prices
+  input: "¿Cuánto cuesta la entrada en Fixture Cinema Norte?"
+  expected_tools: ["get_theaters"]
+  category: happy_path
+
+# --- RAG / KNOWLEDGE ---
+- case_id: refund-policy
+  input: "¿Puedo pedir reembolso si llego tarde?"
+  expected_tools: ["search_knowledge"]
+  category: rag
+
+- case_id: data-accuracy
+  input: "¿Los horarios que me das son siempre correctos?"
+  expected_tools: ["search_knowledge"]
+  category: rag
+
+- case_id: ticket-purchase
+  input: "¿Puedo comprar entradas a través de esta app?"
+  expected_tools: ["search_knowledge"]
+  category: rag
+
+- case_id: how-cinemapi-works
+  input: "¿De dónde sacas la información de los cines?"
+  expected_tools: ["search_knowledge"]
+  category: rag
+
+# --- EDGE CASES ---
+- case_id: off-topic-capital
+  input: "¿Cuál es la capital de Francia?"
+  expected_tools: []
+  category: edge
+
+- case_id: off-topic-weather
+  input: "¿Qué tiempo hace hoy en Barcelona?"
+  expected_tools: []
+  category: edge
+
+- case_id: off-topic-recipe
+  input: "Dame una receta de paella"
+  expected_tools: []
+  category: edge
+
+- case_id: movie-not-exists
+  input: "¿Cuándo ponen Avatar 5?"
+  expected_tools: ["get_showtimes"]
+  category: edge
+
+- case_id: past-date
+  input: "¿Qué sesiones había el 1 de enero de 2020?"
+  expected_tools: ["get_showtimes"]
+  category: edge
+
+- case_id: greeting-only
+  input: "Hola, ¿cómo estás?"
+  expected_tools: []
+  category: edge

@@ -120,6 +120,24 @@ def get_search_knowledge_use_case(
     return SearchKnowledge(embedder=embedder, repository=repository)
 
 
+def build_chat(
+    llm: LLMClient,
+    search_theaters: SearchTheaters,
+    search_movies: SearchMovies,
+    list_showtimes: ListShowtimes,
+    find_cheapest_session: FindCheapestSession,
+    search_knowledge: SearchKnowledge,
+) -> Chat:
+    tools = [
+        build_get_theaters_tool(search_theaters),
+        build_get_movies_tool(search_movies),
+        build_get_showtimes_tool(list_showtimes),
+        build_get_cheapest_session_tool(find_cheapest_session),
+        build_search_knowledge_tool(search_knowledge),
+    ]
+    return Chat(llm=llm, tools=tools)
+
+
 def get_chat_use_case(
     llm: LLMClient = Depends(get_llm_client),
     search_theaters: SearchTheaters = Depends(get_search_theaters_use_case),
@@ -130,11 +148,11 @@ def get_chat_use_case(
     ),
     search_knowledge: SearchKnowledge = Depends(get_search_knowledge_use_case),
 ) -> Chat:
-    tools = [
-        build_get_theaters_tool(search_theaters),
-        build_get_movies_tool(search_movies),
-        build_get_showtimes_tool(list_showtimes),
-        build_get_cheapest_session_tool(find_cheapest_session),
-        build_search_knowledge_tool(search_knowledge),
-    ]
-    return Chat(llm=llm, tools=tools)
+    return build_chat(
+        llm=llm,
+        search_theaters=search_theaters,
+        search_movies=search_movies,
+        list_showtimes=list_showtimes,
+        find_cheapest_session=find_cheapest_session,
+        search_knowledge=search_knowledge,
+    )
