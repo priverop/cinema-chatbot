@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from opik import track
+
 from app.application.tools.base import Tool
 from app.domain.entities.chat_message import ChatResponse, ChatTurn
 from app.domain.errors import LLMToolLoopExceeded
@@ -56,6 +58,7 @@ class Chat:
     llm: LLMClient
     tools: list[Tool] = field(default_factory=list)
 
+    @track(name="chat.execute", project_name="cinema-chatbot")
     def __call__(self, message: str, history: list[ChatTurn] | None = None) -> ChatResponse:
         tool_index = {t.spec.name: t for t in self.tools}
         tool_specs = [t.spec for t in self.tools]
@@ -64,6 +67,7 @@ class Chat:
             for t in (history or [])
         ]
         history_: list[Message] = [*prior, Message(role="user", content=message)]
+        tools_called: list[str] = []
 
         for iteration in range(1, MAX_TOOL_ITERATIONS + 1):
             response = self.llm.generate_with_tools(
@@ -73,10 +77,11 @@ class Chat:
             )
 
             if not response.tool_calls:
-                return ChatResponse(reply=response.text)
+                return ChatResponse(reply=response.text, tools_called=tuple(tools_called))
 
             history_.append(Message(role="model", content="", tool_calls=list(response.tool_calls)))
             for call in response.tool_calls:
+                tools_called.append(call.name)
                 tool = tool_index.get(call.name)
                 if tool is None:
                     result = f'{{"error": "unknown tool {call.name}"}}'

@@ -1,6 +1,8 @@
 import json
 import logging
 
+from opik import track
+
 from app.application.tools.base import Tool
 from app.application.use_cases.search_knowledge import SearchKnowledge
 from app.domain.ports.llm_client import ToolSpec
@@ -30,6 +32,7 @@ def build_search_knowledge_tool(search_knowledge: SearchKnowledge) -> Tool:
         },
     )
 
+    @track(name="tool.search_knowledge", project_name="cinema-chatbot")
     def handler(args: dict) -> str:
         query = (args.get("query") or "").strip()
         chunks = search_knowledge(query, k=3)

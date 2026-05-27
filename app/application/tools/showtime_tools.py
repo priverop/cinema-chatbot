@@ -3,6 +3,8 @@ import logging
 from datetime import date, datetime
 from typing import Any
 
+from opik import track
+
 from app.application.tools.base import Tool
 from app.application.use_cases.find_cheapest_session import FindCheapestSession
 from app.application.use_cases.list_showtimes import ListShowtimes
@@ -107,6 +109,7 @@ def build_get_showtimes_tool(list_showtimes: ListShowtimes) -> Tool:
         },
     )
 
+    @track(name="tool.get_showtimes", project_name="cinema-chatbot")
     def handler(args: dict[str, Any]) -> str:
         movie_title = (args.get("movie_title") or "").strip() or None
         theater_name = (args.get("theater_name") or "").strip() or None
@@ -172,6 +175,7 @@ def build_get_cheapest_session_tool(
         },
     )
 
+    @track(name="tool.get_cheapest_session", project_name="cinema-chatbot")
     def handler(args: dict[str, Any]) -> str:
         movie_title = (args.get("movie_title") or "").strip()
         city = (args.get("city") or "").strip() or None

@@ -11,3 +11,4 @@ class ChatTurn:
 @dataclass(frozen=True)
 class ChatResponse:
     reply: str
+    tools_called: tuple[str, ...] = ()

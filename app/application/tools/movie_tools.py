@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Any
 
+from opik import track
+
 from app.application.tools.base import Tool
 from app.application.use_cases.search_movies import SearchMovies
 from app.domain.ports.llm_client import ToolSpec
@@ -49,6 +51,7 @@ def build_get_movies_tool(search_movies: SearchMovies) -> Tool:
         },
     )
 
+    @track(name="tool.get_movies", project_name="cinema-chatbot")
     def handler(args: dict[str, Any]) -> str:
         title = (args.get("title") or "").strip() or None
         director = (args.get("director") or "").strip() or None
