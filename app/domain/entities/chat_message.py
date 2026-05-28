@@ -12,3 +12,4 @@ class ChatTurn:
 class ChatResponse:
     reply: str
     tools_called: tuple[str, ...] = ()
+    tool_outputs: tuple[str, ...] = () # We shouldn't be storing this here (domain), but for the simplicity of the learning project...

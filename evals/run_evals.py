@@ -8,10 +8,12 @@ from app.domain.errors import LLMRateLimited
 from app.infrastructure.config.settings import get_settings
 from app.infrastructure.observability.opik_setup import configure_opik
 from evals.chat_factory import build_chat_for_evals
+from evals.metrics.correctness import CorrectnessJudge
+from evals.metrics.hallucination import HallucinationGuarded
 from evals.metrics.tool_selection import ToolSelection
 
 DATASET_NAME = "cinema-eval-v1"
-EXPERIMENT_NAME = "tool-selection-baseline"
+EXPERIMENT_NAME = "tool-selection+hallucination-v1"
 
 # Free tier: 15 RPM → 1 request every 4s minimum. Use 5s to stay safe.
 _THROTTLE_SECONDS = 5
@@ -35,6 +37,7 @@ def make_task():
             return {
                 "tools_called": list(response.tools_called),
                 "output": response.reply,
+                "context": list(response.tool_outputs),
             }
 
     return chat_task
@@ -47,7 +50,7 @@ def main() -> None:
     evaluate(
         dataset=dataset,
         task=make_task(),
-        scoring_metrics=[ToolSelection()],
+        scoring_metrics=[ToolSelection(), HallucinationGuarded(), CorrectnessJudge()],
         experiment_name=EXPERIMENT_NAME,
         task_threads=1,
     )

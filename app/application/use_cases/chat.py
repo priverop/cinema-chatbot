@@ -74,6 +74,7 @@ class Chat:
         ]
         history_: list[Message] = [*prior, Message(role="user", content=message)]
         tools_called: list[str] = []
+        tool_outputs: list[str] = []
 
         for iteration in range(1, MAX_TOOL_ITERATIONS + 1):
             response = self.llm.generate_with_tools(
@@ -83,7 +84,11 @@ class Chat:
             )
 
             if not response.tool_calls:
-                return ChatResponse(reply=response.text, tools_called=tuple(tools_called))
+                return ChatResponse(
+                    reply=response.text,
+                    tools_called=tuple(tools_called),
+                    tool_outputs=tuple(tool_outputs),
+                )
 
             history_.append(Message(role="model", content="", tool_calls=list(response.tool_calls)))
             for call in response.tool_calls:
@@ -95,6 +100,7 @@ class Chat:
                 else:
                     logger.info("tool call iter=%d name=%s args=%s", iteration, call.name, call.args)
                     result = tool.handler(call.args)
+                tool_outputs.append(result)
                 history_.append(Message(role="tool", content=result, tool_name=call.name))
 
         raise LLMToolLoopExceeded(
