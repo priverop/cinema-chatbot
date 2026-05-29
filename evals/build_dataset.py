@@ -13,23 +13,29 @@ from app.infrastructure.config.settings import get_settings
 from app.infrastructure.observability.opik_setup import configure_opik
 
 DATASET_NAME = "cinema-eval-v1"
+DATASET_RAG_NAME = "cinema-eval-v1-rag"
 YAML_PATH = Path(__file__).parent / "dataset.yaml"
+
+
+def _recreate(client: Opik, name: str, description: str, items: list) -> None:
+    try:
+        client._rest_client.datasets.delete_dataset_by_name(dataset_name=name)
+        print(f"Deleted existing dataset '{name}'")
+    except Exception:
+        pass
+    ds = client.create_dataset(name=name, description=description)
+    ds.insert(items)
+    print(f"Created '{name}' with {len(items)} items")
 
 
 def main() -> None:
     configure_opik(get_settings())
     items = yaml.safe_load(YAML_PATH.read_text())
+    rag_items = [i for i in items if i.get("category") == "rag"]
     client = Opik()
 
-    try:
-        client._rest_client.datasets.delete_dataset_by_name(dataset_name=DATASET_NAME)
-        print(f"Deleted existing dataset '{DATASET_NAME}'")
-    except Exception:
-        pass
-
-    dataset = client.create_dataset(name=DATASET_NAME, description="Cinema-chatbot eval cases v1")
-    dataset.insert(items)
-    print(f"Created '{DATASET_NAME}' with {len(items)} items")
+    _recreate(client, DATASET_NAME, "Cinema-chatbot eval cases v1", items)
+    _recreate(client, DATASET_RAG_NAME, "Cinema-chatbot RAG-only eval cases v1", rag_items)
 
 
 if __name__ == "__main__":

@@ -101,21 +101,25 @@
   input: "¿Puedo pedir reembolso si llego tarde?"
   expected_tools: ["search_knowledge"]
   category: rag
+  expected_output: "Cinemapi no gestiona reembolsos ni reservas. Todas las compras y cancelaciones se realizan directamente en la web del cine correspondiente. Para preguntas sobre reembolsos deberías contactar con el cine."
 
 - case_id: data-accuracy
   input: "¿Los horarios que me das son siempre correctos?"
   expected_tools: ["search_knowledge"]
   category: rag
+  expected_output: "La información proviene de las webs públicas de los cines, pero Cinemapi no puede garantizar que esté siempre actualizada. El cine puede haber modificado sus horarios sin que Cinemapi los haya sincronizado aún. Conviene verificar en la web oficial del cine antes de ir."
 
 - case_id: ticket-purchase
   input: "¿Puedo comprar entradas a través de esta app?"
   expected_tools: ["search_knowledge"]
   category: rag
+  expected_output: "No, Cinemapi no vende entradas ni procesa pagos. Solo agrega y muestra información pública de los cines. La compra de entradas siempre se realiza en la web oficial del cine correspondiente."
 
 - case_id: how-cinemapi-works
   input: "¿De dónde sacas la información de los cines?"
   expected_tools: ["search_knowledge"]
   category: rag
+  expected_output: "Toda la información proviene de las webs públicas de los cines. Cinemapi agrega y organiza esos datos públicos, pero no los crea ni modifica manualmente."
 
 # --- EDGE CASES ---
 - case_id: off-topic-capital
