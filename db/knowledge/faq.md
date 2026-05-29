@@ -39,3 +39,7 @@ No. Cinemapi only aggregates and displays public cinema information. Ticket purc
 ## Where does Cinemapi get its information from?
 
 All information comes from publicly available cinema websites. Cinemapi does not create or modify movie schedules or cinema data manually.
+
+## Does Cinemapi offer refunds?
+
+No. Cinemapi does not sell tickets or any other product. Ticket purchases, and possible refunds are always completed on the original cinema website.
