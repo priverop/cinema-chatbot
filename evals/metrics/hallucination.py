@@ -1,5 +1,11 @@
+import time
+
 from opik.evaluation.metrics import BaseMetric, Hallucination
 from opik.evaluation.metrics.score_result import ScoreResult
+
+# Delay before calling Gemini to avoid RPM bursts when multiple judge metrics
+# fire back-to-back after a task call. See CorrectnessJudge for the same pattern.
+_JUDGE_THROTTLE_SECONDS = 5
 
 
 class HallucinationGuarded(BaseMetric):
@@ -16,4 +22,7 @@ class HallucinationGuarded(BaseMetric):
                 value=0.0,
                 reason="skipped: no tool context",
             )
-        return self._inner.score(input=input, output=output, context=list(context))
+        time.sleep(_JUDGE_THROTTLE_SECONDS)
+        result = self._inner.score(input=input, output=output, context=list(context))
+        result.name = self.name
+        return result

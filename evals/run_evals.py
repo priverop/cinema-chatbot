@@ -13,10 +13,13 @@ from evals.metrics.hallucination import HallucinationGuarded
 from evals.metrics.tool_selection import ToolSelection
 
 DATASET_NAME = "cinema-eval-v1"
-EXPERIMENT_NAME = "tool-selection+hallucination-v1"
+EXPERIMENT_NAME = "tool-selection+hallucination+correctness-v1"
 
-# Free tier: 15 RPM → 1 request every 4s minimum. Use 5s to stay safe.
-_THROTTLE_SECONDS = 5
+# Free tier: 15 RPM. Each item triggers 3 Gemini calls (task + 2 judges).
+# Judges add 5s each (see _JUDGE_THROTTLE_SECONDS in metrics). Total per item:
+# 20s task gap + ~5s task call + 5s + ~5s hallucination + 5s + ~5s correctness ≈ 45s
+# → ~4 RPM, well under the 15 RPM limit.
+_THROTTLE_SECONDS = 20
 _RATE_LIMIT_RETRY_SECONDS = 61
 
 
@@ -30,6 +33,9 @@ def make_task():
             return {
                 "tools_called": list(response.tools_called),
                 "output": response.reply,
+                "context": list(response.tool_outputs),
+                "input": item["input"],
+                "expected_output": item.get("expected_output"),
             }
         except LLMRateLimited:
             time.sleep(_RATE_LIMIT_RETRY_SECONDS)
@@ -38,6 +44,8 @@ def make_task():
                 "tools_called": list(response.tools_called),
                 "output": response.reply,
                 "context": list(response.tool_outputs),
+                "input": item["input"],
+                "expected_output": item.get("expected_output"),
             }
 
     return chat_task

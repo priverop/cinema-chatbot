@@ -7,79 +7,94 @@
   input: "¿Qué películas están en cartelera?"
   expected_tools: ["get_movies"]
   category: happy_path
+  expected_output: "Hay 5 películas en cartelera: FixtureFilm Alpha (Acción, 120 min, dir. John Fixture), FixtureFilm Beta (Drama, 95 min, dir. Jane Fixture), FixtureFilm Gamma (Comedia, 100 min, dir. Bob Fixture), FixtureFilm Delta (Thriller, 110 min, dir. Alice Fixture) y FixtureFilm Epsilon (Animación, 85 min, dir. Charlie Fixture)."
 
 - case_id: movies-by-genre-comedy
   input: "¿Hay alguna comedia en cartelera?"
   expected_tools: ["get_movies"]
   category: happy_path
+  expected_output: "Sí, hay una comedia en cartelera: FixtureFilm Gamma, dirigida por Bob Fixture, con una duración de 100 minutos."
 
 - case_id: movies-by-director
   input: "¿Qué pelis de Christopher Nolan hay?"
   expected_tools: ["get_movies"]
   category: happy_path
+  expected_output: "No hay películas de Christopher Nolan en cartelera actualmente."
 
 - case_id: movies-by-duration
   input: "Pelis que duren menos de 2 horas"
   expected_tools: ["get_movies"]
   category: happy_path
+  expected_output: "Las películas que duran menos de 2 horas son: FixtureFilm Beta (95 min), FixtureFilm Gamma (100 min), FixtureFilm Delta (110 min) y FixtureFilm Epsilon (85 min)."
 
 # --- SHOWTIMES ---
 - case_id: showtimes-today
   input: "¿Qué sesiones hay hoy?"
   expected_tools: ["get_showtimes"]
   category: happy_path
+  expected_output: "No hay sesiones programadas para hoy."
 
 - case_id: showtimes-tomorrow
   input: "¿Qué pelis hay mañana?"
   expected_tools: ["get_showtimes"]
   category: happy_path
+  expected_output: "No hay sesiones programadas para mañana."
 
 - case_id: showtimes-vose
   input: "¿Hay sesiones en versión original con subtítulos?"
   expected_tools: ["get_showtimes"]
   category: happy_path
+  expected_output: "Hay 3 sesiones en versión original subtitulada (VOSE): FixtureFilm Alpha en Fixture Cinema Sur el 2099-06-01 a las 17:00, FixtureFilm Gamma en Fixture Cinema Sur el 2099-06-04 a las 20:00, y FixtureFilm Epsilon en Fixture Cinema Norte el 2099-06-07 a las 12:00."
 
 - case_id: showtimes-movie-specific
   input: "¿Cuándo ponen FixtureFilm Alpha?"
   expected_tools: ["get_showtimes"]
   category: happy_path
+  expected_output: "FixtureFilm Alpha tiene dos sesiones: el 2099-06-01 a las 10:00 en Fixture Cinema Norte (doblada) y el 2099-06-01 a las 17:00 en Fixture Cinema Sur (versión original subtitulada)."
 
 - case_id: showtimes-weekend
   input: "Sesiones del fin de semana"
   expected_tools: ["get_showtimes"]
   category: happy_path
+  expected_output: "No hay sesiones programadas para este fin de semana."
 
 # --- CHEAPEST SESSION ---
 - case_id: cheapest-any-movie
   input: "¿Cuál es la sesión más barata para FixtureFilm Alpha?"
   expected_tools: ["get_cheapest_session"]
   category: happy_path
+  expected_output: "La sesión más barata de FixtureFilm Alpha es el 2099-06-01 a las 10:00 en Fixture Cinema Norte, con un precio de 7,00 € (descuento de lunes aplicado)."
 
 - case_id: cheapest-specific-movie
   input: "¿Dónde puedo ver FixtureFilm Beta más barato?"
   expected_tools: ["get_cheapest_session"]
   category: happy_path
+  expected_output: "La opción más barata para ver FixtureFilm Beta es el 2099-06-02 a las 18:00 en Fixture Cinema Sur, con un precio de 8,00 € (descuento de martes aplicado)."
 
 - case_id: cheapest-this-week
   input: "La sesión más barata para FixtureFilm Gamma esta semana"
   expected_tools: ["get_cheapest_session"]
   category: happy_path
+  expected_output: "No hay sesiones de FixtureFilm Gamma programadas para esta semana."
 
 # --- THEATERS ---
 - case_id: list-theaters
   input: "¿Qué cines hay disponibles?"
   expected_tools: ["get_theaters"]
   category: happy_path
+  expected_output: "Hay dos cines disponibles: Fixture Cinema Norte en Madrid y Fixture Cinema Sur en Barcelona."
 
 - case_id: theater-by-city
   input: "¿Qué salas hay en Madrid?"
   expected_tools: ["get_theaters"]
   category: happy_path
+  expected_output: "En Madrid está disponible Fixture Cinema Norte."
 
 - case_id: theater-prices
   input: "¿Cuánto cuesta la entrada en Fixture Cinema Norte?"
   expected_tools: ["get_theaters"]
   category: happy_path
+  expected_output: "La entrada en Fixture Cinema Norte cuesta 10,00 € (precio general) o 7,00 € (precio reducido los lunes y miércoles)."
 
 # --- RAG / KNOWLEDGE ---
 - case_id: refund-policy

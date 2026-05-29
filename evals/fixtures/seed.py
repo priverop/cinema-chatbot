@@ -38,11 +38,11 @@ def seed() -> None:
     SQLModel.metadata.create_all(engine)
 
     movies = [
-        MovieRow(id=1, created_at=_TS, updated_at=_TS, title="FixtureFilm Alpha", directors="John Fixture", duration=120, genre="Action", is_enabled=True),
+        MovieRow(id=1, created_at=_TS, updated_at=_TS, title="FixtureFilm Alpha", directors="John Fixture", duration=120, genre="Acción", is_enabled=True),
         MovieRow(id=2, created_at=_TS, updated_at=_TS, title="FixtureFilm Beta", directors="Jane Fixture", duration=95, genre="Drama", is_enabled=True),
-        MovieRow(id=3, created_at=_TS, updated_at=_TS, title="FixtureFilm Gamma", directors="Bob Fixture", duration=100, genre="Comedy", is_enabled=True),
+        MovieRow(id=3, created_at=_TS, updated_at=_TS, title="FixtureFilm Gamma", directors="Bob Fixture", duration=100, genre="Comedia", is_enabled=True),
         MovieRow(id=4, created_at=_TS, updated_at=_TS, title="FixtureFilm Delta", directors="Alice Fixture", duration=110, genre="Thriller", is_enabled=True),
-        MovieRow(id=5, created_at=_TS, updated_at=_TS, title="FixtureFilm Epsilon", directors="Charlie Fixture", duration=85, genre="Animation", is_enabled=True),
+        MovieRow(id=5, created_at=_TS, updated_at=_TS, title="FixtureFilm Epsilon", directors="Charlie Fixture", duration=85, genre="Animación", is_enabled=True),
     ]
 
     theaters = [
