@@ -21,7 +21,7 @@ from app.infrastructure.repositories.sqlmodel_theater_repository import SQLModel
 _DEFAULT_FIXTURE_DB = Path(__file__).parent / "fixtures" / "test.sqlite3"
 
 
-def build_chat_for_evals(db_path: Path | None = None) -> Chat:
+def build_chat_for_evals(db_path: Path | None = None, prompt_variant: str = "v1") -> Chat:
     settings = get_settings()
     resolved = db_path or _DEFAULT_FIXTURE_DB
     fixture_engine = create_engine(
@@ -44,4 +44,5 @@ def build_chat_for_evals(db_path: Path | None = None) -> Chat:
         list_showtimes=ListShowtimes(repository=SQLModelShowtimeRepository(session=session)),
         find_cheapest_session=FindCheapestSession(repository=SQLModelShowtimeRepository(session=session)),
         search_knowledge=SearchKnowledge(embedder=embedder, repository=knowledge_repo),
+        prompt_variant=prompt_variant,
     )

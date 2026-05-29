@@ -127,6 +127,7 @@ def build_chat(
     list_showtimes: ListShowtimes,
     find_cheapest_session: FindCheapestSession,
     search_knowledge: SearchKnowledge,
+    prompt_variant: str = "v1",
 ) -> Chat:
     tools = [
         build_get_theaters_tool(search_theaters),
@@ -135,7 +136,7 @@ def build_chat(
         build_get_cheapest_session_tool(find_cheapest_session),
         build_search_knowledge_tool(search_knowledge),
     ]
-    return Chat(llm=llm, tools=tools)
+    return Chat(llm=llm, tools=tools, prompt_variant=prompt_variant)
 
 
 def get_chat_use_case(

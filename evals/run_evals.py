@@ -16,13 +16,21 @@ from evals.metrics.tool_selection import ToolSelection
 
 DATASET_NAME = "cinema-eval-v1"
 DATASET_RAG_NAME = "cinema-eval-v1-rag"
-GENERAL_EXPERIMENT_NAME = "tool-selection+hallucination+correctness-v1"
 RAG_EXPERIMENT_NAME = "rag-context-precision-recall-v1"
+
+# A/B prompt variants. Each experiment runs the full DATASET_NAME with one
+# prompt variant. Results land in Opik under the same dataset so the UI can
+# compare them side-by-side via the Experiments tab.
+_PROMPT_VARIANTS = [
+    ("v1", "prompt-v1-baseline"),
+    ("v2", "prompt-v2-short"),
+]
 
 # Free tier: 15 RPM. Each item triggers 3 Gemini calls (task + 2 judges).
 # Judges add 5s each (see _JUDGE_THROTTLE_SECONDS in metrics). Total per item:
 # 20s task gap + ~5s task call + 5s + ~5s hallucination + 5s + ~5s correctness ≈ 45s
 # → ~4 RPM, well under the 15 RPM limit.
+# Running 2 variants back-to-back: ~45s × dataset_size × 2 ≈ 520s minimum.
 _THROTTLE_SECONDS = 20
 _RATE_LIMIT_RETRY_SECONDS = 61
 
@@ -42,8 +50,8 @@ def _parse_retrieved_chunks(tool_outputs: list) -> list[str]:
     return chunks
 
 
-def make_task():
-    chat = build_chat_for_evals()
+def make_task(prompt_variant: str = "v1"):
+    chat = build_chat_for_evals(prompt_variant=prompt_variant)
 
     def chat_task(item: dict) -> dict:
         time.sleep(_THROTTLE_SECONDS)
@@ -70,16 +78,18 @@ def main() -> None:
     configure_opik(get_settings())
     client = Opik()
 
-    # Run 1: all cases — tool selection, hallucination, correctness
+    # A/B: run both prompt variants against the same dataset so Opik can
+    # compare them side-by-side (dataset → Experiments tab → select both).
     dataset = client.get_dataset(name=DATASET_NAME)
-    evaluate(
-        dataset=dataset,
-        task=make_task(),
-        scoring_metrics=[ToolSelection(), HallucinationGuarded(), CorrectnessJudge()],
-        experiment_name=GENERAL_EXPERIMENT_NAME,
-        task_threads=1,
-    )
-    print(f"Experiment '{GENERAL_EXPERIMENT_NAME}' completed.")
+    for variant, exp_name in _PROMPT_VARIANTS:
+        evaluate(
+            dataset=dataset,
+            task=make_task(variant),
+            scoring_metrics=[ToolSelection(), HallucinationGuarded(), CorrectnessJudge()],
+            experiment_name=exp_name,
+            task_threads=1,
+        )
+        print(f"Experiment '{exp_name}' completed.")
 
     # Run 2: RAG cases only — context precision and recall
     rag_dataset = client.get_dataset(name=DATASET_RAG_NAME)
