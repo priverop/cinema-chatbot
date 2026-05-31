@@ -12,6 +12,8 @@ from evals.chat_factory import build_chat_for_evals
 from evals.metrics.context_metrics import ContextPrecisionThrottled, ContextRecallThrottled
 from evals.metrics.correctness import CorrectnessJudge
 from evals.metrics.hallucination import HallucinationGuarded
+from evals.metrics.moderation import MODERATION_AVAILABLE, ModerationGuarded
+from evals.metrics.off_topic import OffTopicRefusal
 from evals.metrics.tool_selection import ToolSelection
 
 DATASET_NAME = "cinema-eval-v1"
@@ -26,8 +28,10 @@ _PROMPT_VARIANTS = [
     ("v2", "prompt-v2-short"),
 ]
 
-# Free tier: 15 RPM. Each item triggers 3 Gemini calls (task + 2 judges).
-# Judges add 5s each (see _JUDGE_THROTTLE_SECONDS in metrics). Total per item:
+# Free tier: 15 RPM. Each item triggers 3 Gemini calls (task + 2 LLM judges).
+# OffTopicRefusal is deterministic (no LLM call). ModerationGuarded adds 1 more
+# LLM call if MODERATION_AVAILABLE. Judges add 5s each (see _JUDGE_THROTTLE_SECONDS
+# in metrics). Total per item without moderation:
 # 20s task gap + ~5s task call + 5s + ~5s hallucination + 5s + ~5s correctness ≈ 45s
 # → ~4 RPM, well under the 15 RPM limit.
 # Running 2 variants back-to-back: ~45s × dataset_size × 2 ≈ 520s minimum.
@@ -81,11 +85,15 @@ def main() -> None:
     # A/B: run both prompt variants against the same dataset so Opik can
     # compare them side-by-side (dataset → Experiments tab → select both).
     dataset = client.get_dataset(name=DATASET_NAME)
+    base_metrics = [ToolSelection(), HallucinationGuarded(), CorrectnessJudge(), OffTopicRefusal()]
+    if MODERATION_AVAILABLE:
+        base_metrics.append(ModerationGuarded())
+
     for variant, exp_name in _PROMPT_VARIANTS:
         evaluate(
             dataset=dataset,
             task=make_task(variant),
-            scoring_metrics=[ToolSelection(), HallucinationGuarded(), CorrectnessJudge()],
+            scoring_metrics=base_metrics,
             experiment_name=exp_name,
             task_threads=1,
         )
