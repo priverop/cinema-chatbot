@@ -1,5 +1,15 @@
-"""Run evals against cinema-eval-v1 dataset and record results in Opik."""
+"""Run evals against cinema-eval-v1 dataset and record results in Opik.
+
+Flags (env vars, set to "1" to enable):
+  RUN_AB=1          run second prompt variant (v2) in addition to v1
+  RUN_RAG=1         run RAG context precision/recall experiment
+  RUN_MODERATION=1  include ModerationGuarded metric (1 extra LLM call/item)
+
+Default (no flags): runs only v1 with base metrics (tool selection,
+hallucination, correctness, off-topic refusal). Cheapest on the free tier.
+"""
 import json
+import os
 import time
 
 from opik import Opik
@@ -20,9 +30,6 @@ DATASET_NAME = "cinema-eval-v1"
 DATASET_RAG_NAME = "cinema-eval-v1-rag"
 RAG_EXPERIMENT_NAME = "rag-context-precision-recall-v1"
 
-# A/B prompt variants. Each experiment runs the full DATASET_NAME with one
-# prompt variant. Results land in Opik under the same dataset so the UI can
-# compare them side-by-side via the Experiments tab.
 _PROMPT_VARIANTS = [
     ("v1", "prompt-v1-baseline"),
     ("v2", "prompt-v2-short"),
@@ -30,13 +37,17 @@ _PROMPT_VARIANTS = [
 
 # Free tier: 15 RPM. Each item triggers 3 Gemini calls (task + 2 LLM judges).
 # OffTopicRefusal is deterministic (no LLM call). ModerationGuarded adds 1 more
-# LLM call if MODERATION_AVAILABLE. Judges add 5s each (see _JUDGE_THROTTLE_SECONDS
+# LLM call if RUN_MODERATION=1. Judges add 5s each (see _JUDGE_THROTTLE_SECONDS
 # in metrics). Total per item without moderation:
 # 20s task gap + ~5s task call + 5s + ~5s hallucination + 5s + ~5s correctness ≈ 45s
 # → ~4 RPM, well under the 15 RPM limit.
 # Running 2 variants back-to-back: ~45s × dataset_size × 2 ≈ 520s minimum.
 _THROTTLE_SECONDS = 20
 _RATE_LIMIT_RETRY_SECONDS = 61
+
+_RUN_AB = os.getenv("RUN_AB") == "1"
+_RUN_RAG = os.getenv("RUN_RAG") == "1"
+_RUN_MODERATION = os.getenv("RUN_MODERATION") == "1" and MODERATION_AVAILABLE
 
 
 def _parse_retrieved_chunks(tool_outputs: list) -> list[str]:
@@ -82,35 +93,35 @@ def main() -> None:
     configure_opik(get_settings())
     client = Opik()
 
-    # A/B: run both prompt variants against the same dataset so Opik can
-    # compare them side-by-side (dataset → Experiments tab → select both).
-    dataset = client.get_dataset(name=DATASET_NAME)
-    base_metrics = [ToolSelection(), HallucinationGuarded(), CorrectnessJudge(), OffTopicRefusal()]
-    if MODERATION_AVAILABLE:
-        base_metrics.append(ModerationGuarded())
+    scoring_metrics = [ToolSelection(), HallucinationGuarded(), CorrectnessJudge(), OffTopicRefusal()]
+    if _RUN_MODERATION:
+        scoring_metrics.append(ModerationGuarded())
 
-    for variant, exp_name in _PROMPT_VARIANTS:
+    variants = _PROMPT_VARIANTS if _RUN_AB else _PROMPT_VARIANTS[:1]
+
+    dataset = client.get_dataset(name=DATASET_NAME)
+    for variant, exp_name in variants:
         evaluate(
             dataset=dataset,
             task=make_task(variant),
-            scoring_metrics=base_metrics,
+            scoring_metrics=scoring_metrics,
             experiment_name=exp_name,
             task_threads=1,
         )
         print(f"Experiment '{exp_name}' completed.")
 
-    # Run 2: RAG cases only — context precision and recall
-    rag_dataset = client.get_dataset(name=DATASET_RAG_NAME)
-    evaluate(
-        dataset=rag_dataset,
-        task=make_task(),
-        scoring_metrics=[ContextPrecisionThrottled(), ContextRecallThrottled()],
-        experiment_name=RAG_EXPERIMENT_NAME,
-        task_threads=1,
-    )
-    print(f"Experiment '{RAG_EXPERIMENT_NAME}' completed.")
+    if _RUN_RAG:
+        rag_dataset = client.get_dataset(name=DATASET_RAG_NAME)
+        evaluate(
+            dataset=rag_dataset,
+            task=make_task(),
+            scoring_metrics=[ContextPrecisionThrottled(), ContextRecallThrottled()],
+            experiment_name=RAG_EXPERIMENT_NAME,
+            task_threads=1,
+        )
+        print(f"Experiment '{RAG_EXPERIMENT_NAME}' completed.")
 
-    print("Both experiments done. Check Opik UI for results.")
+    print("Evals done. Check Opik UI for results.")
 
 
 if __name__ == "__main__":
