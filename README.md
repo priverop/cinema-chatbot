@@ -6,6 +6,9 @@ Users ask questions in natural language to get information about theaters, movie
 
 The goal of this project is to learn about AI harnessing, tooling, embeddings, RAG, evals, and guardrails.
 
+> [!WARNING]
+> This is a learning project. The provided database only has showtimes for May 2026, so it won't retrieve anything. If you actually want to use it, you need to get a new database using the scraper of [Cinemapi](https://github.com/priverop/cinemapi).
+
 ## Stack
 
 - [FastAPI](https://fastapi.tiangolo.com/) (Python) — hexagonal architecture.
