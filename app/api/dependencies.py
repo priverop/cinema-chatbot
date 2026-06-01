@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlmodel import Session
 
+from app.application.guardrails.composite import CompositeGuardrail
 from app.application.tools.knowledge_tools import build_search_knowledge_tool
 from app.application.tools.movie_tools import build_get_movies_tool
 from app.application.tools.showtime_tools import (
@@ -10,6 +11,7 @@ from app.application.tools.showtime_tools import (
 from app.application.tools.theater_tools import build_get_theaters_tool
 from app.application.use_cases.chat import Chat
 from app.application.use_cases.find_cheapest_session import FindCheapestSession
+from app.application.use_cases.guarded_chat import GuardedChat
 from app.application.use_cases.list_movies import ListMovies
 from app.application.use_cases.list_showtimes import ListShowtimes
 from app.application.use_cases.list_theaters import ListTheaters
@@ -24,6 +26,8 @@ from app.domain.ports.showtime_repository import ShowtimeRepository
 from app.domain.ports.theater_repository import TheaterRepository
 from app.infrastructure.config.settings import Settings, get_settings
 from app.infrastructure.db.engine import get_session
+from app.infrastructure.guardrails.regex_prompt_injection import RegexPromptInjection
+from app.infrastructure.guardrails.title_leak import TitleLeakGuardrail
 from app.infrastructure.llm.gemini_client import GeminiClient
 from app.infrastructure.llm.gemini_embedding_client import GeminiEmbeddingClient
 from app.infrastructure.rag.chroma_knowledge_repository import ChromaKnowledgeRepository
@@ -127,8 +131,9 @@ def build_chat(
     list_showtimes: ListShowtimes,
     find_cheapest_session: FindCheapestSession,
     search_knowledge: SearchKnowledge,
+    movie_repository: MovieRepository,
     prompt_variant: str = "v1",
-) -> Chat:
+) -> GuardedChat:
     tools = [
         build_get_theaters_tool(search_theaters),
         build_get_movies_tool(search_movies),
@@ -136,7 +141,12 @@ def build_chat(
         build_get_cheapest_session_tool(find_cheapest_session),
         build_search_knowledge_tool(search_knowledge),
     ]
-    return Chat(llm=llm, tools=tools, prompt_variant=prompt_variant)
+    inner = Chat(llm=llm, tools=tools, prompt_variant=prompt_variant)
+    guardrail = CompositeGuardrail(guardrails=[
+        RegexPromptInjection(),
+        TitleLeakGuardrail(movie_repository=movie_repository),
+    ])
+    return GuardedChat(inner=inner, guardrail=guardrail)
 
 
 def get_chat_use_case(
@@ -148,7 +158,8 @@ def get_chat_use_case(
         get_find_cheapest_session_use_case
     ),
     search_knowledge: SearchKnowledge = Depends(get_search_knowledge_use_case),
-) -> Chat:
+    movie_repository: MovieRepository = Depends(get_movie_repository),
+) -> GuardedChat:
     return build_chat(
         llm=llm,
         search_theaters=search_theaters,
@@ -156,4 +167,5 @@ def get_chat_use_case(
         list_showtimes=list_showtimes,
         find_cheapest_session=find_cheapest_session,
         search_knowledge=search_knowledge,
+        movie_repository=movie_repository,
     )

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.api.dependencies import get_chat_use_case
-from app.application.use_cases.chat import Chat
+from app.application.use_cases.guarded_chat import GuardedChat
 from app.domain.entities.chat_message import ChatTurn
 
 router = APIRouter()
@@ -27,7 +27,7 @@ class ChatReply(BaseModel):
 @router.post("/chat", response_model=ChatReply)
 def post_chat(
     request: ChatRequest,
-    use_case: Chat = Depends(get_chat_use_case),
+    use_case: GuardedChat = Depends(get_chat_use_case),
 ) -> ChatReply:
     turns = [ChatTurn(role=t.role, text=t.text) for t in request.history]
     result = use_case(request.message, history=turns)
