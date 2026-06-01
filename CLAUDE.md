@@ -125,3 +125,73 @@ Example:
   "movie": "Dune",
   "date": "today"
 }
+```
+---
+
+### V4 — RAG
+
+The assistant can answer questions using internal documentation.
+
+Examples:
+
+refund policy
+VIP room rules
+language availability
+discounts
+
+Implementation ideas:
+
+markdown files
+embeddings
+vector search
+retrieval + context injection
+
+---
+
+### V5 — Evals
+
+Build simple evaluation tooling:
+
+latency
+token usage
+estimated cost
+correctness
+hallucination checks
+
+Compare:
+
+prompts
+models
+retrieval strategies
+
+---
+
+## Guardrails
+
+### Phase 7 (current) — Eval-only
+
+Guardrails implemented as eval metrics only. No changes to `/chat` endpoint.
+
+New metrics in `evals/metrics/`:
+- `OffTopicRefusal` — deterministic. Scores `edge` cases (`expected_tools == []`). Passes if no tools called and reply contains no cinema data (prices, showtimes, movie titles). Non-edge items skipped.
+- `ModerationGuarded` — wraps `opik.evaluation.metrics.Moderation`. Only registered if `MODERATION_AVAILABLE == True` in the installed opik version.
+
+New adversarial dataset cases in `evals/dataset.yaml` (`category: edge`): prompt injection (ignore-instructions, roleplay jailbreak), off-topic creative request, inappropriate output request.
+
+### Phase 8 (future) — Runtime guardrails
+
+If guardrails should protect the `/chat` endpoint, place them in the **application layer**, not API middleware.
+
+**Why application layer, not middleware:**
+Middleware sees raw HTTP only. Guardrail decisions are domain policy ("do we serve this request?") that need access to conversational state and potentially tool outputs for output checks. Middleware would also force coupling between FastAPI transport and policy logic, making it untestable from CLI or other channels.
+
+**Recommended structure:**
+```
+app/domain/ports/guardrail.py                    # Guardrail protocol (port)
+app/domain/entities/guardrail_result.py          # GuardrailResult{allowed, reason, category}
+app/application/use_cases/guarded_chat.py        # Composes Chat + Guardrail port
+app/infrastructure/guardrails/opik_moderation.py # Concrete adapter (LLM judge)
+app/infrastructure/guardrails/regex_guardrail.py # Concrete adapter (fast, no LLM)
+```
+
+`GuardedChat` wraps the existing `Chat` use case via composition (not inheritance), preserving the `Chat` class unchanged. The DI factory in `app/api/dependencies.py` is updated to wire `GuardedChat` instead of `Chat` directly.
