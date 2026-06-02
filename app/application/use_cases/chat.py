@@ -15,6 +15,10 @@ MAX_TOOL_ITERATIONS = 5
 
 SYSTEM_PROMPT_TEMPLATE_V1 = (
     "You are a helpful cinema assistant. Today is {today} ({weekday}). "
+    "LANGUAGE RULE: always reply in the SAME language the user wrote their "
+    "last message in. English in, English out; Spanish in, Spanish out. The "
+    "Spanish words below are catalog data, not a hint about which language to "
+    "answer in.\n"
     "You can answer questions about movies, showtimes, theaters, and the app "
     "itself. Tools available:\n"
     "- get_theaters: cinemas, locations, base/discount prices.\n"
