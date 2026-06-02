@@ -13,7 +13,7 @@ The goal of this project is to learn about AI harnessing, tooling, embeddings, R
 
 Please, check out the [Video showcase](https://www.youtube.com/watch?v=shNJJnryfzk) of the project:
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/shNJJnryfzk/0.jpg)](https://www.youtube.com/watch?v=shNJJnryfzk)
+[![Video Demo](./thumbnail.jpg)](https://www.youtube.com/watch?v=shNJJnryfzk)
 
 ## Stack
 
