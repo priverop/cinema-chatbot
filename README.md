@@ -9,6 +9,12 @@ The goal of this project is to learn about AI harnessing, tooling, embeddings, R
 > [!WARNING]
 > This is a learning project. The provided database only has showtimes for May 2026, so it won't retrieve anything. If you actually want to use it, you need to get a new database using the scraper of [Cinemapi](https://github.com/priverop/cinemapi).
 
+## DEMO
+
+Please, check out the [Video showcase](https://www.youtube.com/watch?v=shNJJnryfzk) of the project:
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/shNJJnryfzk/0.jpg)](https://www.youtube.com/watch?v=shNJJnryfzk)
+
 ## Stack
 
 - [FastAPI](https://fastapi.tiangolo.com/) (Python) — hexagonal architecture.
